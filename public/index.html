@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Karaokuite — le blindtest des soirées</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="stagelights" aria-hidden="true"></div>
+
+  <button id="nav-back" class="nav-back" type="button" hidden></button>
+
+  <header class="masthead">
+    <p class="masthead__eyebrow">le blindtest des soirées</p>
+    <h1 class="masthead__title">Karaokuite</h1>
+    <p class="masthead__sub">
+      Choisis un morceau, mise tes gorgées, chante… jusqu'à ce que le son se coupe.
+    </p>
+  </header>
+
+  <main class="wrap">
+    <!-- Étape 1 : inscription des participants -->
+    <section id="participants" class="panel" aria-label="Participants">
+      <form id="participants-form" class="search" autocomplete="off">
+        <input
+          id="participant-input"
+          class="search__input"
+          type="text"
+          placeholder="Prénom du participant…"
+          aria-label="Ajouter un participant"
+        />
+        <button class="btn btn--primary" type="submit">Ajouter</button>
+      </form>
+      <ul id="participants-list" class="participants__list"></ul>
+      <button id="participants-continue" class="btn btn--primary" disabled>Continuer</button>
+    </section>
+
+    <!-- Étape 2 : paramètres de la soirée -->
+    <section id="settings" class="panel" hidden aria-label="Réglages">
+      <div class="settings__category">
+        <h2 class="settings__category-title">Source audio</h2>
+        <div id="mode-banner" class="banner" role="region" aria-label="Source audio"></div>
+      </div>
+
+      <div class="settings__category">
+        <h2 class="settings__category-title">Choix de musique</h2>
+        <div id="music-mode" class="settings__options"></div>
+        <p class="hint" id="multi-hint" hidden>Le filtre (artiste/genre) se choisit à chaque tour, pas ici — ça permet de varier.</p>
+      </div>
+
+      <div class="settings__category">
+        <h2 class="settings__category-title">Personnes</h2>
+        <div id="person-mode" class="settings__options"></div>
+        <div id="team-setup" class="settings__subrow" hidden>
+          <label class="settings__label" for="team-count-input">Nombre d'équipes</label>
+          <input id="team-count-input" type="number" min="2" max="8" value="2" />
+          <div id="team-assign-list" class="teamassign"></div>
+        </div>
+      </div>
+
+      <p id="settings-error" class="hint error"></p>
+      <button id="settings-start" class="btn btn--primary" disabled>Commencer la soirée</button>
+    </section>
+
+    <!-- Bannière persistante : à qui le tour -->
+    <section id="turn-banner" class="turnbanner" hidden aria-live="polite"></section>
+
+    <!-- Étape 3 (mode Libre) : recherche -->
+    <section id="search-panel" class="panel" hidden aria-label="Recherche de morceau">
+      <form id="search-form" class="search" autocomplete="off">
+        <input
+          id="search-input"
+          class="search__input"
+          type="text"
+          placeholder="Un titre, un artiste…  (ex : Angèle, Orelsan, Dua Lipa)"
+          aria-label="Rechercher un morceau"
+        />
+        <button class="btn btn--primary" type="submit">Chercher</button>
+      </form>
+      <div id="results" class="results" aria-live="polite"></div>
+    </section>
+
+    <!-- Étape 3 (modes Choix multiple / Aléatoire) : proposition de morceaux -->
+    <section id="track-picker" class="panel" hidden aria-label="Choix du morceau">
+      <form id="picker-filter-form" class="search" autocomplete="off" hidden>
+        <input
+          id="picker-filter-input"
+          class="search__input"
+          type="text"
+          placeholder="Un artiste ou un genre… (ex : Angèle, rap français)"
+          aria-label="Filtre artiste ou genre"
+        />
+        <button class="btn btn--primary" type="submit">Proposer 3 morceaux</button>
+      </form>
+      <p id="track-picker-status" class="hint"></p>
+      <div id="track-picker-list" class="results"></div>
+    </section>
+
+    <!-- Scène de jeu -->
+    <section id="stage" class="stage panel" hidden aria-label="Karaoké">
+      <div id="now-playing" class="np"></div>
+      <div id="track-progress" class="progress" aria-hidden="true"></div>
+      <div id="bet-bar" class="bet"></div>
+
+      <div class="scene">
+        <div id="lyrics" class="lyrics" aria-live="off"></div>
+        <div id="lyrics-waiting" class="lyrics-waiting" aria-hidden="true">🎵 L'intro joue…</div>
+        <div id="answer" class="answer" hidden></div>
+      </div>
+
+      <div id="controls" class="controls"></div>
+    </section>
+  </main>
+
+  <div id="toasts" class="toasts" aria-live="assertive"></div>
+
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>
