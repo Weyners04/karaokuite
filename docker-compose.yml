@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      # Le même .env que pour un lancement local (cf. .env.example) — les
+      # identifiants Spotify ne sont jamais copiés dans l'image, seulement
+      # injectés en variables d'environnement au démarrage du conteneur.
+      - .env
+    restart: unless-stopped

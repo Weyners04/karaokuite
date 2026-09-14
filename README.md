@@ -47,6 +47,23 @@ pour voir tout le mécanisme fonctionner (chanson de test synthétisée, paroles
 
 ---
 
+## 🐳 Docker
+
+Alternative à `npm install`/`npm start` : tout tourne dans un conteneur, aucune
+installation de Node nécessaire sur la machine hôte.
+
+```bash
+cp .env.example .env      # puis remplis tes identifiants Spotify (comme ci-dessous)
+docker compose up -d --build   # http://127.0.0.1:3000
+```
+
+- Le fichier `.env` n'est **jamais copié dans l'image** — `docker compose` l'injecte
+  au démarrage du conteneur via `env_file` (mêmes variables qu'en local).
+- `docker compose logs -f` pour suivre les logs, `docker compose down` pour arrêter.
+- Après une modif du code : relance simplement `docker compose up -d --build`.
+
+---
+
 ## 🔑 Configuration Spotify
 
 La **recherche** et la **lecture** utilisent l'API Spotify. Il faut créer une application
