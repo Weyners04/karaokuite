@@ -1,9 +1,14 @@
-import { MusicMode, PersonMode } from '../model/PartyModel.js';
+import { MusicMode, HoleZone, PersonMode } from '../model/PartyModel.js';
 
 const MUSIC_MODE_LABELS = [
   { mode: MusicMode.FREE, label: 'Sélection libre', hint: 'Tu cherches et choisis toi-même' },
   { mode: MusicMode.MULTI, label: 'Choix multiple', hint: '3 morceaux proposés selon un filtre' },
   { mode: MusicMode.RANDOM, label: 'Complètement aléatoire', hint: 'Aucun choix, la chance décide' },
+];
+
+const HOLE_ZONE_LABELS = [
+  { mode: HoleZone.FULL, label: 'Chanson entière', hint: 'La coupure peut tomber n\'importe où' },
+  { mode: HoleZone.FIRST_90S, label: '90 premières secondes', hint: 'La coupure tombe avant 1 min 30' },
 ];
 
 const PERSON_MODE_LABELS = [
@@ -14,19 +19,20 @@ const PERSON_MODE_LABELS = [
 /**
  * SettingsView — écran des paramètres de la soirée : source audio (banni��re
  * Spotify/Démo pilotée par StatusView, relocalisée ici), choix de musique,
- * personnes/équipes. Purement présentationnelle.
+ * moment du trou, personnes/équipes. Purement présentationnelle.
  */
 export class SettingsView {
   /**
-   * @param {object} refs - { root, musicMode, multiHint, personMode,
+   * @param {object} refs - { root, musicMode, multiHint, holeZone, personMode,
    *   teamSetup, teamCountInput, teamAssignList, startBtn, errorEl }
-   * @param {object} callbacks - { onMusicMode, onPersonMode, onTeamCount,
-   *   onAssign, onStart }
+   * @param {object} callbacks - { onMusicMode, onHoleZone, onPersonMode,
+   *   onTeamCount, onAssign, onStart }
    */
   constructor(refs, callbacks) {
     this.root = refs.root;
     this.musicModeEl = refs.musicMode;
     this.multiHint = refs.multiHint;
+    this.holeZoneEl = refs.holeZone;
     this.personModeEl = refs.personMode;
     this.teamSetup = refs.teamSetup;
     this.teamCountInput = refs.teamCountInput;
@@ -36,6 +42,7 @@ export class SettingsView {
     this.cb = callbacks;
 
     this.#buildOptions(this.musicModeEl, MUSIC_MODE_LABELS, (mode) => this.cb.onMusicMode(mode));
+    this.#buildOptions(this.holeZoneEl, HOLE_ZONE_LABELS, (zone) => this.cb.onHoleZone(zone));
     this.#buildOptions(this.personModeEl, PERSON_MODE_LABELS, (mode) => this.cb.onPersonMode(mode));
 
     this.teamCountInput.addEventListener('change', (e) => this.cb.onTeamCount(Number(e.target.value)));
@@ -71,6 +78,13 @@ export class SettingsView {
       btn.classList.toggle('is-active', btn.dataset.mode === party.musicMode);
     });
     this.multiHint.hidden = party.musicMode !== MusicMode.MULTI;
+  }
+
+  /** @param {import('../model/PartyModel.js').PartyModel} party */
+  renderHoleZone(party) {
+    this.holeZoneEl.querySelectorAll('.settings__option-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.mode === party.holeZone);
+    });
   }
 
   /** @param {import('../model/PartyModel.js').PartyModel} party */

@@ -52,6 +52,7 @@ async function boot() {
       root: $('settings'),
       musicMode: $('music-mode'),
       multiHint: $('multi-hint'),
+      holeZone: $('hole-zone'),
       personMode: $('person-mode'),
       teamSetup: $('team-setup'),
       teamCountInput: $('team-count-input'),
@@ -61,6 +62,7 @@ async function boot() {
     },
     {
       onMusicMode: (mode) => controller.setMusicMode(mode),
+      onHoleZone: (zone) => controller.setHoleZone(zone),
       onPersonMode: (mode) => controller.setPersonMode(mode),
       onTeamCount: (n) => controller.setTeamCount(n),
       onAssign: (pid, tid) => controller.assignTeam(pid, tid),

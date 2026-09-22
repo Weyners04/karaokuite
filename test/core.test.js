@@ -144,6 +144,49 @@ test('prepareHole commence toujours en début de ligne', () => {
   }
 });
 
+// Morceau "long" (≈ 3 min 20) : une ligne de 8 mots toutes les 10 s, donc
+// un trou est possible partout, avant comme après 90 s.
+function makeLongModel(firstLineMs = 0) {
+  const lines = Array.from({ length: 21 }, (_, i) => {
+    const text = `Ligne ${i} du long morceau avec huit mots`;
+    return { time: firstLineMs + i * 10_000, text, words: splitWords(text) };
+  });
+  const model = new GameModel();
+  model.setTrack({ id: 'long', title: 'Long', lines });
+  return model;
+}
+
+test('prepareHole avec maxCutMs ne coupe jamais après la limite', () => {
+  const model = makeLongModel();
+  for (const bet of BETS) {
+    model.setBet(bet.sips);
+    for (let i = 0; i < 50; i++) {
+      const hole = model.prepareHole({ maxCutMs: 90_000 });
+      assert.ok(hole.cutTimeMs <= 90_000, `coupure à ${hole.cutTimeMs} ms`);
+      // La règle "pas dans le tout début" (15 % des lignes) reste appliquée.
+      assert.ok(hole.startLineIndex >= Math.floor(model.lines.length * 0.15));
+    }
+  }
+});
+
+test('prepareHole sans limite (chanson entière) peut couper après 90 s', () => {
+  const model = makeLongModel();
+  model.setBet(1);
+  const cuts = Array.from({ length: 50 }, () => model.prepareHole().cutTimeMs);
+  assert.ok(cuts.some((t) => t > 90_000));
+});
+
+test('prepareHole avec maxCutMs : aucune ligne avant la limite -> la plus précoce possible', () => {
+  // Les paroles ne commencent qu'à 100 s : impossible de couper avant 90 s.
+  const model = makeLongModel(100_000);
+  model.setBet(1);
+  for (let i = 0; i < 20; i++) {
+    const hole = model.prepareHole({ maxCutMs: 90_000 });
+    assert.equal(hole.startLineIndex, 0);
+    assert.equal(hole.cutTimeMs, 100_000);
+  }
+});
+
 test('setVerdict renvoie la bonne instruction', () => {
   const model = makeModel();
   model.setBet(3);

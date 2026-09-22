@@ -1,5 +1,5 @@
 import { GameModel, Phase } from '../model/GameModel.js';
-import { PartyModel, MusicMode } from '../model/PartyModel.js';
+import { PartyModel, MusicMode, HoleZone } from '../model/PartyModel.js';
 import { DEMO_TRACK } from '../lib/demoTrack.js';
 import { pickRandomTrack, sampleTracks } from '../lib/trackPicking.js';
 import { DemoPlayer } from './players/DemoPlayer.js';
@@ -21,6 +21,12 @@ import { SpotifyPlayer } from './players/SpotifyPlayer.js';
 
 // On coupe quelques ms avant le mot pour ne pas laisser entendre le début.
 const CUT_LEAD_MS = 80;
+
+// Instant de coupure maximal selon le réglage "Moment du trou".
+const MAX_CUT_MS = {
+  [HoleZone.FULL]: Infinity,
+  [HoleZone.FIRST_90S]: 90_000,
+};
 
 export class GameController {
   /**
@@ -115,6 +121,11 @@ export class GameController {
     this.#renderReadiness();
   }
 
+  setHoleZone(zone) {
+    this.party.setHoleZone(zone);
+    this.views.settings.renderHoleZone(this.party);
+  }
+
   setPersonMode(mode) {
     this.party.setPersonMode(mode);
     this.views.settings.renderPersonMode(this.party);
@@ -141,6 +152,7 @@ export class GameController {
 
   #renderSettings() {
     this.views.settings.renderMusicMode(this.party);
+    this.views.settings.renderHoleZone(this.party);
     this.views.settings.renderPersonMode(this.party);
     this.views.settings.renderTeams(this.party);
     this.#renderReadiness();
@@ -327,7 +339,7 @@ export class GameController {
       this.views.status.toast('Choisis d’abord ta mise.', 'info');
       return;
     }
-    const hole = this.model.prepareHole();
+    const hole = this.model.prepareHole({ maxCutMs: MAX_CUT_MS[this.party.holeZone] });
     this.model.start();
     this.views.karaoke.setHoleLineIndex(hole.startLineIndex);
 

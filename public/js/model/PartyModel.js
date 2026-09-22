@@ -1,7 +1,8 @@
 /**
  * PartyModel — état et règles de la "soirée" (PUR, sans DOM) :
  *   - liste des participants (ordre d'inscription),
- *   - paramètres de la partie (mode de sélection musicale, mode joueurs),
+ *   - paramètres de la partie (mode de sélection musicale, moment du trou,
+ *     mode joueurs),
  *   - équipes (si mode Équipe) et leurs assignations,
  *   - rotation des tours (qui chante ensuite).
  *
@@ -21,6 +22,11 @@ export const MusicMode = {
   RANDOM: 'random', // morceau totalement aléatoire, aucun choix
 };
 
+export const HoleZone = {
+  FULL: 'full', // la coupure peut tomber n'importe où dans le morceau
+  FIRST_90S: 'first90s', // la coupure tombe dans les 90 premières secondes
+};
+
 export const PersonMode = {
   SOLO: 'solo', // chaque participant chante à son tour
   TEAM: 'team', // les participants sont répartis en équipes
@@ -37,6 +43,7 @@ export class PartyModel {
     this.phase = PartyPhase.PARTICIPANTS;
     this.musicMode = MusicMode.FREE;
     this.multiFilter = ''; // ex: "artist:Angèle" ou "genre:rap français"
+    this.holeZone = HoleZone.FULL;
     this.personMode = PersonMode.SOLO;
     this.teamCount = 2;
     this.teams = []; // [{id, label}]
@@ -81,6 +88,14 @@ export class PartyModel {
    */
   setMultiFilter(text) {
     this.multiFilter = (text || '').trim();
+  }
+
+  // --- Paramètres : moment du trou ---
+
+  /** @param {string} zone - une valeur de HoleZone */
+  setHoleZone(zone) {
+    if (!Object.values(HoleZone).includes(zone)) throw new Error(`Moment du trou invalide : ${zone}`);
+    this.holeZone = zone;
   }
 
   // --- Paramètres : personnes / équipes ---

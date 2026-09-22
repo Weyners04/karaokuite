@@ -100,16 +100,13 @@ export class GameModel {
    * Lignes dont le nombre de mots permet un trou "propre" (un vrai début de
    * phrase, jamais coupé à cheval sur la ligne suivante) pour la mise en
    * cours : au moins `wordsMin` mots, on en masque jusqu'à `wordsMax` mais
-   * jamais plus que ce que contient la ligne.
-   * @param {number} minLine
-   * @param {number} maxLine
+   * jamais plus que ce que contient la ligne. Triées dans l'ordre du morceau.
    * @returns {{lineIndex:number, n:number}[]}
    */
-  #cleanHoleCandidates(minLine, maxLine) {
+  #cleanHoleCandidates() {
     const { wordsMin, wordsMax } = this.bet;
     const candidates = [];
     this.lines.forEach((line, lineIndex) => {
-      if (lineIndex < minLine || lineIndex > maxLine) return;
       if (line.words.length < wordsMin) return;
       candidates.push({ lineIndex, n: Math.min(line.words.length, wordsMax) });
     });
@@ -126,22 +123,32 @@ export class GameModel {
    *     diables et les"), qui n'a aucun sens à deviner ;
    *   - il commence en début de ligne (la coupure tombe pile sur un début de
    *     ligne, donc la musique s'arrête proprement) ;
-   *   - on évite le tout début et la toute fin du morceau (15 % – 85 %).
+   *   - on évite le tout début et la toute fin du morceau (15 % – 85 % des
+   *     lignes) ;
+   *   - si `maxCutMs` est fourni (réglage « 90 premières secondes »), la
+   *     coupure ne tombe jamais après cet instant.
    *
-   * Repli si aucune ligne de la zone médiane n'est assez longue : on relâche
-   * d'abord la zone, puis en dernier recours (paroles à vers très courts) on
-   * retombe sur l'ancien algorithme mot-à-mot, qui peut chevaucher deux lignes.
+   * Repli si aucune ligne ne convient : on relâche d'abord la zone 15–85 %
+   * (en gardant la limite de temps) ; si aucune ligne assez longue ne tombe
+   * avant `maxCutMs`, on prend la plus précoce du morceau (le trou arrive
+   * alors le plus tôt possible). En dernier recours (paroles à vers très
+   * courts) on retombe sur l'ancien algorithme mot-à-mot, qui peut
+   * chevaucher deux lignes.
    *
+   * @param {{maxCutMs?:number}} [opts] - instant de coupure maximal, en ms
    * @returns {{cutTimeMs:number, startLineIndex:number, words:string[]}}
    */
-  prepareHole() {
+  prepareHole({ maxCutMs = Infinity } = {}) {
     if (!this.bet) throw new Error('Aucune mise définie.');
     const lineCount = this.lines.length;
     const minLine = Math.floor(lineCount * 0.15);
     const maxLine = Math.floor(lineCount * 0.85);
+    const inTime = ({ lineIndex }) => this.lines[lineIndex].time <= maxCutMs;
 
-    let pool = this.#cleanHoleCandidates(minLine, maxLine);
-    if (!pool.length) pool = this.#cleanHoleCandidates(0, lineCount - 1);
+    const clean = this.#cleanHoleCandidates();
+    let pool = clean.filter((c) => c.lineIndex >= minLine && c.lineIndex <= maxLine && inTime(c));
+    if (!pool.length) pool = clean.filter(inTime);
+    if (!pool.length) pool = clean.slice(0, 1);
 
     if (pool.length) {
       const { lineIndex, n } = pool[Math.floor(Math.random() * pool.length)];
@@ -159,14 +166,18 @@ export class GameModel {
     // enchaîner des mots de deux lignes différentes.
     const flat = this.#flattenWords();
     const n = this.bet.wordsMax;
-    const fallback = flat
+    const starts = flat
       .map((w, i) => ({ w, i }))
       .filter(({ w, i }) => w.firstOfLine && i + n <= flat.length)
       .map(({ i }) => i);
 
-    if (fallback.length === 0) {
+    if (starts.length === 0) {
       throw new Error('Paroles trop courtes pour créer un trou.');
     }
+
+    // Même logique de limite de temps que plus haut.
+    const startsInTime = starts.filter((i) => flat[i].time <= maxCutMs);
+    const fallback = startsInTime.length ? startsInTime : starts.slice(0, 1);
 
     const startFlat = fallback[Math.floor(Math.random() * fallback.length)];
     const masked = flat.slice(startFlat, startFlat + n);

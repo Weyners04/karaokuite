@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { PartyModel, PartyPhase, MusicMode, PersonMode } from '../public/js/model/PartyModel.js';
+import { PartyModel, PartyPhase, MusicMode, HoleZone, PersonMode } from '../public/js/model/PartyModel.js';
 import { pickRandomTrack, sampleTracks } from '../public/js/lib/trackPicking.js';
 
 // --- PartyModel : participants ---
@@ -184,6 +184,22 @@ test('reset() remet tout à zéro (y compris les participants), contrairement à
   assert.equal(party.participants.length, 0);
   assert.equal(party.phase, PartyPhase.PARTICIPANTS);
   assert.equal(party.currentTurnIndex, 0);
+});
+
+// --- Moment du trou ---
+
+test('setHoleZone : chanson entière par défaut, 90 s possible, refuse une valeur inconnue', () => {
+  const party = new PartyModel();
+  assert.equal(party.holeZone, HoleZone.FULL);
+
+  party.setHoleZone(HoleZone.FIRST_90S);
+  assert.equal(party.holeZone, HoleZone.FIRST_90S);
+
+  assert.throws(() => party.setHoleZone('refrain'));
+  assert.equal(party.holeZone, HoleZone.FIRST_90S);
+
+  party.reset();
+  assert.equal(party.holeZone, HoleZone.FULL);
 });
 
 // --- trackPicking ---

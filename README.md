@@ -29,6 +29,8 @@ les mots masqués.
      | Choix multiple | Le joueur tape un artiste ou un genre (« Angèle », « rap français »…), le jeu propose **3 morceaux** jouables. Le filtre se ressaisit à chaque tour. |
      | Complètement aléatoire | Aucun choix : le jeu tire un artiste ou un genre (liste surtout francophone) puis un morceau au hasard. Changer de chanson coûte **1 gorgée**. |
 
+   - **Moment du trou** : **chanson entière** (la coupure peut tomber n'importe où) ou
+     **90 premières secondes** (la coupure tombe avant 1 min 30, pour des tours plus courts).
    - **Joueurs** : **seul** (chacun son tour) ou **en équipe** (au moins 2 équipes, chaque
      participant assigné, aucune équipe vide). En équipe, ce sont les équipes qui tournent.
 3. **Commencer la soirée**. On peut revenir aux paramètres en cours de route sans perdre
@@ -47,7 +49,9 @@ haute, plus il y a de mots à retrouver** :
 
 Le nombre exact dépend de la ligne tirée : le trou est toujours pris **dans une seule
 ligne, depuis son début**, pour qu'il y ait une vraie phrase à deviner. Il tombe entre
-15 % et 85 % du morceau (ni l'intro, ni la fin).
+15 % et 85 % du morceau (ni l'intro, ni la fin). En mode **90 premières secondes**, il
+tombe en plus avant 1 min 30 ; si aucune ligne assez longue n'existe avant, le trou
+est placé sur la première ligne qui convient, le plus tôt possible.
 
 La musique démarre, les paroles défilent. À un instant aléatoire, **le son se coupe**
 et une rangée de mots masqués apparaît. Le joueur dit les mots à voix haute, on
@@ -197,9 +201,11 @@ npm test
 
 - `test/core.test.js` — parsing LRC, rapprochement par durée, logique de mise et de
   génération du trou (le nombre de mots reste dans la tranche de la mise, le trou tient
-  dans une seule ligne et commence à son début), indice « initiales » et verdict.
-- `test/party.test.js` — participants, équipes et assignations, conditions de démarrage,
-  rotation des tours (solo et équipe), tirage aléatoire des morceaux.
+  dans une seule ligne et commence à son début, limite des 90 premières secondes),
+  indice « initiales » et verdict.
+- `test/party.test.js` — participants, moment du trou, équipes et assignations,
+  conditions de démarrage, rotation des tours (solo et équipe), tirage aléatoire des
+  morceaux.
 - `test/smoke.test.js` — câblage HTTP (config sans fuite du secret, statiques, fallback SPA).
 
 ---
