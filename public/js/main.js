@@ -117,17 +117,23 @@ async function boot() {
     { banner: $('mode-banner'), toasts: $('toasts'), redirectUri: cfg.spotify.redirectUri },
     {
       onConnectSpotify: () => controller.useSpotify(),
-      onDemo: () => controller.useDemo(),
+      onReconfigure: () => {
+        controller.disconnectSpotify();
+        renderSource();
+        statusView.toast('Déconnecté. Tu peux changer de Client ID ou te reconnecter.', 'info');
+      },
       getCustomClientId: () => SpotifyAuth.getCustomClientId(),
       onSaveClientId: (id) => {
         SpotifyAuth.setCustomClientId(id);
         statusView.toast('Client ID enregistré ! Clique « Se connecter à Spotify ».', 'ok');
         renderSource();
+        controller.refreshReadiness();
       },
       onClearClientId: () => {
         SpotifyAuth.clearCustomClientId();
-        statusView.toast('Client ID personnel oublié — retour à l’accès par défaut.', 'info');
+        statusView.toast('Client ID oublié. Renseigne-en un nouveau pour te connecter.', 'info');
         renderSource();
+        controller.refreshReadiness();
       },
     },
   );
@@ -168,7 +174,10 @@ async function boot() {
   // nettoyé et le bouton « Se connecter à Spotify » reste visible — le Client ID
   // perso, lui, est conservé, donc une simple reconnexion d'un clic suffit.
   renderSource();
-  if (auth.isLoggedIn()) {
+  // Reconnexion auto seulement si un Client ID perso est enregistré : un token
+  // sans Client ID viendrait de l'ancienne app par défaut (403), on repart alors
+  // du choix de source + tuto.
+  if (auth.isLoggedIn() && SpotifyAuth.getCustomClientId()) {
     controller.useSpotify();
   }
 

@@ -1,44 +1,51 @@
 /**
- * StatusView — bannière de mode (Spotify / Démo) + petites notifications.
+ * StatusView — bannière de source audio (connexion Spotify + tuto) + toasts.
  */
 export class StatusView {
   constructor(refs, callbacks) {
     this.banner = refs.banner;
     this.toasts = refs.toasts;
     this.redirectUri = refs.redirectUri || '';
-    // { onConnectSpotify, onDemo, onSaveClientId, onClearClientId, getCustomClientId }
+    // { onConnectSpotify, onReconfigure, onSaveClientId, onClearClientId, getCustomClientId }
     this.cb = callbacks;
   }
 
   /**
-   * @param {{mode:'none'|'spotify'|'demo', ready:boolean, missing:string[]}} state
+   * @param {{mode:'none'|'spotify'}} state
    */
   renderMode(state) {
     if (state.mode === 'spotify') {
       this.banner.className = 'banner banner--ok';
-      this.banner.innerHTML = `🎧 Connecté à Spotify Premium — recherche et lecture actives.`;
-      return;
-    }
-    if (state.mode === 'demo') {
-      this.banner.className = 'banner banner--demo';
-      this.banner.innerHTML = `🧪 Mode démo (sans Spotify) — chanson de test synthétisée.`;
+      this.banner.innerHTML = `
+        <span>🎧 Connecté à Spotify — recherche et lecture actives.</span>
+        <button type="button" class="btn btn--ghost btn--mini" data-act="reconfigure">Changer de compte</button>
+      `;
+      this.banner
+        .querySelector('[data-act="reconfigure"]')
+        ?.addEventListener('click', () => this.cb.onReconfigure?.());
       return;
     }
 
-    // Aucun mode actif encore : on propose les sources + le tuto « ton propre accès ».
+    // Non connecté : connexion Spotify via SON PROPRE Client ID (tuto obligatoire).
     const customId = this.cb.getCustomClientId?.() || '';
     const redirectUri = this.redirectUri;
-    const canSpotify = Boolean(state.ready) || Boolean(customId);
+    // On EXIGE un Client ID perso avant d'autoriser la connexion : se connecter
+    // sur l'app par défaut mènerait à un 403 « user not registered ».
+    const canSpotify = Boolean(customId);
 
     this.banner.className = 'banner banner--choose';
     this.banner.innerHTML = `
       <div class="source-pick">
-        <span>Choisis une source&nbsp;:</span>
+        <span>Pour jouer&nbsp;:</span>
         <button type="button" class="btn btn--primary" data-act="spotify" ${canSpotify ? '' : 'disabled'}>
           Se connecter à Spotify
         </button>
-        <button type="button" class="btn btn--ghost" data-act="demo">Essayer le mode démo</button>
       </div>
+      ${
+        canSpotify
+          ? ''
+          : `<p class="hint">👇 Renseigne d'abord ton <strong>Client ID</strong> ci-dessous pour activer la connexion.</p>`
+      }
 
       <details class="spotify-help" ${customId ? '' : 'open'}>
         <summary class="spotify-help__summary">🔑 Première connexion&nbsp;? Configure ton accès Spotify</summary>
@@ -75,11 +82,6 @@ export class StatusView {
           <p class="hint">Ensuite, clique <strong>Se connecter à Spotify</strong> ci-dessus&nbsp;: tu es redirigé vers Spotify puis ramené ici, prêt à jouer.</p>
         </div>
       </details>
-      ${
-        canSpotify
-          ? ''
-          : `<em class="hint">Config Spotify du serveur manquante (${(state.missing || []).join(', ')}).</em>`
-      }
     `;
 
     // Valeurs injectées via propriété (jamais dans le HTML) pour éviter tout
@@ -90,7 +92,6 @@ export class StatusView {
     if (idInput) idInput.value = customId;
 
     this.banner.querySelector('[data-act="spotify"]')?.addEventListener('click', () => this.cb.onConnectSpotify());
-    this.banner.querySelector('[data-act="demo"]')?.addEventListener('click', () => this.cb.onDemo());
 
     const copyBtn = this.banner.querySelector('[data-act="copy-uri"]');
     copyBtn?.addEventListener('click', async () => {

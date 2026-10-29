@@ -10,7 +10,6 @@ les mots masqués.
 - **Recherche Spotify** (métadonnées : titre, artiste, durée, pochette)
 - **Paroles synchronisées LRCLIB** récupérées **en parallèle** de la recherche
 - **Lecteur synchronisé** qui coupe la musique à un timestamp aléatoire et masque les mots
-- **Mode démo** intégré : teste tout le mécanisme **sans compte Spotify**
 
 ---
 
@@ -20,7 +19,7 @@ les mots masqués.
 
 1. **Participants** : on inscrit les joueurs (l'ordre d'inscription = l'ordre de passage).
 2. **Paramètres** :
-   - **Source audio** : se connecter à Spotify, ou essayer le mode démo.
+   - **Source audio** : connecte-toi à Spotify avec **ta propre app** (voir la config plus bas).
    - **Choix de la musique** :
 
      | Mode | Principe |
@@ -82,10 +81,9 @@ npm start                 # http://127.0.0.1:3000
 > 🆕 Première fois ? Le guide **[INSTALLATION.md](INSTALLATION.md)** reprend tout depuis
 > zéro, y compris la création de ton app sur le dashboard Spotify.
 
-Sans configuration Spotify, tu peux quand même cliquer sur **« Essayer le mode démo »**
-(dans l'écran Paramètres, après avoir ajouté au moins un participant) pour voir tout le
-mécanisme fonctionner : chanson de test synthétisée, paroles originales. En mode démo,
-il n'y a qu'une chanson : le mode de choix de la musique est ignoré.
+La lecture passe par Spotify : chaque joueur se connecte avec **sa propre app Spotify**
+(création guidée directement dans l'app, et détaillée dans [INSTALLATION.md](INSTALLATION.md)).
+Un compte **Spotify Premium** est nécessaire pour l'hôte qui lance la musique.
 
 ---
 
@@ -165,11 +163,9 @@ blindtest-paroles/
 │       │   ├── GameController.js   # C — compose les 2 modèles, synchro, coupure, verdict
 │       │   └── players/            # abstraction lecteur
 │       │       ├── PlayerAdapter.js  # interface commune
-│       │       ├── SpotifyPlayer.js  # Web Playback SDK
-│       │       └── DemoPlayer.js     # synthé Web Audio (hors-ligne)
+│       │       └── SpotifyPlayer.js  # Web Playback SDK
 │       └── lib/
-│           ├── pkce.js             # OAuth Spotify (PKCE)
-│           ├── demoTrack.js        # chanson du mode démo
+│           ├── pkce.js             # OAuth Spotify (PKCE) + Client ID perso
 │           ├── randomSeeds.js      # artistes/genres pour le mode Aléatoire
 │           └── trackPicking.js     # tirage aléatoire / échantillon de 3 morceaux
 └── test/                          # tests unitaires + smoke HTTP
@@ -194,9 +190,9 @@ rend testables directement.
 
 ### L'abstraction « lecteur »
 
-`GameController` ne connaît qu'une interface (`PlayerAdapter`). On branche indifféremment
-`SpotifyPlayer` (réel) ou `DemoPlayer` (hors-ligne). C'est aussi ce qui permettra
-d'ajouter un lecteur **YouTube** plus tard sans toucher à la logique de jeu.
+`GameController` ne connaît qu'une interface (`PlayerAdapter`), implémentée par
+`SpotifyPlayer` (Web Playback SDK). C'est aussi ce qui permettra d'ajouter un lecteur
+**YouTube** plus tard sans toucher à la logique de jeu.
 
 ---
 

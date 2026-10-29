@@ -17,9 +17,6 @@ développement. Fini l'erreur `403 — The user is not registered for this appli
   Tu n'as besoin que de l'un des deux.
 - Les fichiers de Karaokuite (le dépôt du projet) sur ta machine.
 
-> 💡 Tu veux juste **tester le jeu** sans rien configurer ? Lance l'app et clique sur
-> **« Essayer le mode démo »** : une chanson de test tourne sans compte Spotify.
-
 ---
 
 ## Étape 1 — Créer ton application Spotify

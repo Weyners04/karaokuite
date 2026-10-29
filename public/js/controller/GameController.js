@@ -1,8 +1,6 @@
 import { GameModel, Phase } from '../model/GameModel.js';
 import { PartyModel, MusicMode, HoleZone } from '../model/PartyModel.js';
-import { DEMO_TRACK } from '../lib/demoTrack.js';
 import { pickRandomTrack, sampleTracks } from '../lib/trackPicking.js';
-import { DemoPlayer } from './players/DemoPlayer.js';
 import { SpotifyPlayer } from './players/SpotifyPlayer.js';
 
 /**
@@ -158,20 +156,36 @@ export class GameController {
     this.#renderReadiness();
   }
 
+  /** Réévalue l'état du bouton « Commencer » (après saisie/retrait du Client ID). */
+  refreshReadiness() {
+    this.#renderReadiness();
+  }
+
   #renderReadiness() {
-    if (this.mode === 'none') {
-      this.views.settings.renderReadiness({ ok: false, reason: 'Choisis une source audio (Spotify ou Démo).' });
+    if (!this.auth.hasCustomClientId()) {
+      this.views.settings.renderReadiness({
+        ok: false,
+        reason: 'Renseigne ton Client ID Spotify (section Source audio) avant de commencer.',
+      });
+      return;
+    }
+    if (this.mode !== 'spotify') {
+      this.views.settings.renderReadiness({ ok: false, reason: 'Connecte-toi à Spotify pour commencer.' });
       return;
     }
     this.views.settings.renderReadiness(this.party.canStartParty());
   }
 
   startParty() {
-    // Une source audio (Spotify ou Démo) doit être choisie avant de lancer :
+    // Un Client ID perso + une connexion Spotify sont requis avant de lancer :
     // sans ça, this.player reste null et le premier "Lancer le karaoké"
-    // planterait (loadAndPlay sur null), quel que soit le mode de musique.
-    if (this.mode === 'none') {
-      this.views.status.toast('Choisis une source audio (Spotify ou Démo) avant de commencer.', 'info');
+    // planterait (loadAndPlay sur null).
+    if (!this.auth.hasCustomClientId()) {
+      this.views.status.toast('Renseigne ton Client ID Spotify (section Source audio) avant de commencer.', 'info');
+      return;
+    }
+    if (this.mode !== 'spotify') {
+      this.views.status.toast('Connecte-toi à Spotify avant de commencer.', 'info');
       return;
     }
     try {
@@ -189,13 +203,6 @@ export class GameController {
   // --- Étape 3 (par tour) : sélection du morceau selon le mode choisi ---
   async #beginTurn() {
     this.views.turn.render(this.party.currentTurn());
-
-    // En mode démo, une seule chanson existe : les modes de sélection
-    // musicale n'ont pas de sens, on charge toujours la démo.
-    if (this.mode === 'demo') {
-      this.setupTrack(DEMO_TRACK);
-      return;
-    }
 
     const musicMode = this.party.musicMode;
 
@@ -256,7 +263,6 @@ export class GameController {
    * plus aucun enjeu).
    */
   async rerollRandomTrack() {
-    if (this.mode === 'demo') return; // pas de relance en mode Démo (voir setupTrack)
     this.views.status.toast('Tu bois 1 gorgée pour changer de chanson… 🍻', 'info');
     this.stopLoop();
     this.player?.pause?.().catch(() => {});
@@ -266,8 +272,15 @@ export class GameController {
     await this.#pickRandomForTurn();
   }
 
-  // --- Choix de la source audio ---
+  // --- Connexion à Spotify ---
   async useSpotify() {
+    // On exige que le joueur ait d'abord renseigné le Client ID de SA propre
+    // app (via le tuto) : sans ça, se connecter utiliserait une app sur
+    // laquelle il n'est pas autorisé → 403 « user not registered ».
+    if (!this.auth.hasCustomClientId()) {
+      this.views.status.toast('Renseigne d’abord ton Client ID Spotify (section Source audio).', 'info');
+      return;
+    }
     try {
       if (!this.auth.isLoggedIn()) {
         await this.auth.login(); // redirige — la suite se fera au retour
@@ -285,18 +298,25 @@ export class GameController {
     }
   }
 
-  async useDemo() {
-    this.mode = 'demo';
-    this.player = new DemoPlayer();
-    await this.player.ready();
-    this.views.status.renderMode({ mode: 'demo', ready: true });
+  /**
+   * Déconnecte Spotify : coupe la lecture, oublie le token et repasse en mode
+   * « non connecté ». L'appelant réaffiche ensuite le choix de source + le tuto
+   * (bouton « Changer de compte »), ce qui permet de revenir en arrière même
+   * après une connexion sur la mauvaise app.
+   */
+  disconnectSpotify() {
+    this.stopLoop();
+    this.player?.destroy?.();
+    this.player = null;
+    this.mode = 'none';
+    this.auth.logout();
     this.#renderReadiness();
   }
 
   // --- Recherche (mode Libre) ---
   async handleSearch(q) {
     if (this.mode !== 'spotify') {
-      this.views.status.toast('La recherche nécessite Spotify. (Mode démo : chanson fixe.)', 'info');
+      this.views.status.toast('Connecte-toi à Spotify pour chercher un morceau.', 'info');
       return;
     }
     this.views.search.setLoading(true);
@@ -322,10 +342,7 @@ export class GameController {
     this.views.karaoke.resetControls();
     this.views.karaoke.showTrack(track);
     this.views.karaoke.mountLyrics(track.lines);
-    // Pas de relance en mode Démo : une seule chanson existe, "en retirer une
-    // autre" n'a pas de sens et déclencherait une vraie recherche Spotify
-    // inutile (le mode démo n'en a besoin d'aucune).
-    this.views.karaoke.setRerollVisible(this.mode !== 'demo' && this.party.musicMode === MusicMode.RANDOM);
+    this.views.karaoke.setRerollVisible(this.party.musicMode === MusicMode.RANDOM);
     this.views.karaoke.root.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 

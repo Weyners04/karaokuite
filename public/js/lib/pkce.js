@@ -127,6 +127,11 @@ export class SpotifyAuth {
     return SpotifyAuth.getCustomClientId() || this._configClientId;
   }
 
+  /** Un Client ID personnel est-il enregistré dans ce navigateur ? */
+  hasCustomClientId() {
+    return Boolean(SpotifyAuth.getCustomClientId());
+  }
+
   /** Client ID personnel éventuellement enregistré par ce navigateur. */
   static getCustomClientId() {
     try {
