@@ -162,11 +162,14 @@ async function boot() {
   }
 
   // 5. État initial de la bannière source audio (affichée dans l'écran Paramètres).
+  // On affiche TOUJOURS le choix de source d'abord : si une connexion Spotify
+  // valide existe encore, useSpotify() la remplacera par la bannière « connecté ».
+  // Sinon (session expirée ou révoquée depuis la dernière visite), le token est
+  // nettoyé et le bouton « Se connecter à Spotify » reste visible — le Client ID
+  // perso, lui, est conservé, donc une simple reconnexion d'un clic suffit.
+  renderSource();
   if (auth.isLoggedIn()) {
-    // Connexion déjà valide → on arme le lecteur Spotify directement.
     controller.useSpotify();
-  } else {
-    renderSource();
   }
 
   window.addEventListener('beforeunload', () => controller.destroy());
