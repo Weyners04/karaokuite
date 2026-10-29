@@ -114,12 +114,29 @@ async function boot() {
     },
   );
   const statusView = new StatusView(
-    { banner: $('mode-banner'), toasts: $('toasts') },
+    { banner: $('mode-banner'), toasts: $('toasts'), redirectUri: cfg.spotify.redirectUri },
     {
       onConnectSpotify: () => controller.useSpotify(),
       onDemo: () => controller.useDemo(),
+      getCustomClientId: () => SpotifyAuth.getCustomClientId(),
+      onSaveClientId: (id) => {
+        SpotifyAuth.setCustomClientId(id);
+        statusView.toast('Client ID enregistré ! Clique « Se connecter à Spotify ».', 'ok');
+        renderSource();
+      },
+      onClearClientId: () => {
+        SpotifyAuth.clearCustomClientId();
+        statusView.toast('Client ID personnel oublié — retour à l’accès par défaut.', 'info');
+        renderSource();
+      },
     },
   );
+
+  // Affiche la bannière « choix de source » (état non connecté) avec le tuto et
+  // l'éventuel Client ID perso déjà enregistré.
+  function renderSource() {
+    statusView.renderMode({ mode: 'none', ready: cfg.ready, missing: cfg.missing });
+  }
 
   // 3. Contrôleur.
   const controller = new GameController(
@@ -149,7 +166,7 @@ async function boot() {
     // Connexion déjà valide → on arme le lecteur Spotify directement.
     controller.useSpotify();
   } else {
-    statusView.renderMode({ mode: 'none', ready: cfg.ready, missing: cfg.missing });
+    renderSource();
   }
 
   window.addEventListener('beforeunload', () => controller.destroy());

@@ -562,8 +562,59 @@ body {
   .line.is-active { scroll-behavior: auto; }
 }
 
+/* ---------- Bannière "choix de source" + tuto accès Spotify ---------- */
+.banner--choose { flex-direction: column; align-items: stretch; gap: 0.9rem; }
+.source-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; }
+
+.spotify-help {
+  border-top: 1px dashed var(--line);
+  padding-top: 0.8rem;
+}
+.spotify-help__summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--cyan);
+  list-style-position: inside;
+}
+.spotify-help__summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; border-radius: 6px; }
+.spotify-help__body { margin-top: 0.8rem; display: grid; gap: 0.8rem; }
+.spotify-help__body p { margin: 0; }
+.spotify-help__steps {
+  margin: 0;
+  padding-left: 1.3rem;
+  display: grid;
+  gap: 0.55rem;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+.spotify-help__steps a { color: var(--cyan); }
+.spotify-help__steps code,
+.copyfield__value {
+  font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0.12rem 0.4rem;
+  font-size: 0.85em;
+}
+.copyfield {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+.copyfield__value { word-break: break-all; }
+.btn--mini { padding: 0.28rem 0.7rem; font-size: 0.78rem; }
+
+.clientid { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.clientid__input { flex: 1; min-width: 14rem; }
+.spotify-help__saved { color: var(--ok); display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+
 @media (max-width: 560px) {
   .search { flex-direction: column; }
   .line { font-size: 1.05rem; }
   .line.is-active { font-size: 1.35rem; }
+  .clientid { flex-direction: column; }
+  .clientid__input { min-width: 0; width: 100%; }
 }

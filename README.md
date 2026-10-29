@@ -79,6 +79,9 @@ cp .env.example .env      # puis remplis tes identifiants Spotify
 npm start                 # http://127.0.0.1:3000
 ```
 
+> 🆕 Première fois ? Le guide **[INSTALLATION.md](INSTALLATION.md)** reprend tout depuis
+> zéro, y compris la création de ton app sur le dashboard Spotify.
+
 Sans configuration Spotify, tu peux quand même cliquer sur **« Essayer le mode démo »**
 (dans l'écran Paramètres, après avoir ajouté au moins un participant) pour voir tout le
 mécanisme fonctionner : chanson de test synthétisée, paroles originales. En mode démo,
@@ -104,6 +107,10 @@ docker compose up -d --build   # http://127.0.0.1:3000
 ---
 
 ## 🔑 Configuration Spotify
+
+> 👉 **Débutant ou première installation ?** Suis le guide pas-à-pas détaillé :
+> **[INSTALLATION.md](INSTALLATION.md)** (créer ton app Spotify, configurer, lancer,
+> dépannage). La section ci-dessous est le résumé pour les habitués.
 
 La **recherche** et la **lecture** utilisent l'API Spotify. Il faut créer une application
 (gratuit) :

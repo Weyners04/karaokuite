@@ -134,6 +134,14 @@ export class SpotifyPlayer extends PlayerAdapter {
     );
     if (!res.ok && res.status !== 204) {
       const body = await res.text();
+      if (res.status === 403) {
+        // 403 « user not registered » : ce compte Spotify n'est pas autorisé sur
+        // l'app utilisée. On oriente vers la config de son propre accès Spotify.
+        throw new Error(
+          "Ton compte Spotify n'est pas autorisé sur cette app. Dans « Source audio », " +
+            'configure ton propre accès (ton Client ID), puis reconnecte-toi.',
+        );
+      }
       throw new Error(`Lecture Spotify impossible (${res.status}) ${body}`);
     }
 

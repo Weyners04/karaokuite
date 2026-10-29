@@ -17,6 +17,7 @@ const SCOPES = 'streaming user-read-email user-read-private';
 
 const LS_TOKEN = 'btp_token';
 const SS_VERIFIER = 'btp_verifier';
+const LS_CLIENT_ID = 'btp_client_id';
 
 // --- Helpers crypto ---
 function randomString(length = 64) {
@@ -42,8 +43,53 @@ export class SpotifyAuth {
    * @param {{clientId:string, redirectUri:string}} cfg
    */
   constructor(cfg) {
-    this.clientId = cfg.clientId;
+    // Client ID « par défaut » servi par le backend (l'app Spotify du déploiement).
+    // Chaque joueur peut le remplacer par celui de SA propre app Spotify
+    // (setCustomClientId) : il devient alors propriétaire de l'app qu'il utilise,
+    // ce qui évite l'erreur 403 « user not registered » et la limite des 5
+    // utilisateurs du mode développement.
+    this._configClientId = cfg.clientId || '';
     this.redirectUri = cfg.redirectUri;
+  }
+
+  /**
+   * Client ID effectif : celui saisi par le joueur s'il existe, sinon celui du
+   * backend. Lu à chaque usage (login / échange / refresh) pour que tout le flux
+   * PKCE utilise bien la même application.
+   */
+  get clientId() {
+    return SpotifyAuth.getCustomClientId() || this._configClientId;
+  }
+
+  /** Client ID personnel éventuellement enregistré par ce navigateur. */
+  static getCustomClientId() {
+    try {
+      return localStorage.getItem(LS_CLIENT_ID) || '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Enregistre (ou efface si vide) le Client ID de l'app Spotify du joueur.
+   * On jette le token stocké : il appartenait à l'app précédente, le garder
+   * provoquerait des 403 déroutants au prochain essai.
+   */
+  static setCustomClientId(id) {
+    const clean = (id || '').trim();
+    if (clean === SpotifyAuth.getCustomClientId()) return;
+    try {
+      if (clean) localStorage.setItem(LS_CLIENT_ID, clean);
+      else localStorage.removeItem(LS_CLIENT_ID);
+      localStorage.removeItem(LS_TOKEN);
+    } catch {
+      /* stockage indisponible : on ignore silencieusement */
+    }
+  }
+
+  /** Oublie le Client ID personnel (retour à celui du backend). */
+  static clearCustomClientId() {
+    SpotifyAuth.setCustomClientId('');
   }
 
   /** Un token est-il déjà stocké et non expiré ? */
